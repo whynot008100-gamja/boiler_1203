@@ -1,0 +1,14 @@
+{
+	"name": "boiler-1204",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "pnpm --dir nextjs-supabase-boilerplate-main dev",
+		"build": "pnpm --dir nextjs-supabase-boilerplate-main build",
+		"start": "pnpm --dir nextjs-supabase-boilerplate-main start",
+		"lint": "pnpm --dir nextjs-supabase-boilerplate-main lint"
+	},
+	"dependencies": {
+		"@clerk/nextjs": "^6.35.6"
+	}
+}
