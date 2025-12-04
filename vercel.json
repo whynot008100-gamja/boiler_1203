@@ -1,6 +1,4 @@
 {
   "buildCommand": "cd nextjs-supabase-boilerplate-main && npm run build",
-  "installCommand": "cd nextjs-supabase-boilerplate-main && npm install",
-  "rootDirectory": "nextjs-supabase-boilerplate-main"
+  "installCommand": "cd nextjs-supabase-boilerplate-main && npm install"
 }
-
