@@ -18,8 +18,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SaaS 템플릿",
-  description: "Next.js + Clerk + Supabase 보일러플레이트",
+  title: "쇼핑몰 - 스타일리시한 의류 쇼핑몰",
+  description: "트렌디한 패션 아이템을 만나보세요. Next.js + Clerk + Supabase로 구동되는 쇼핑몰",
+  keywords: ["쇼핑몰", "의류", "패션", "온라인 쇼핑"],
+  openGraph: {
+    title: "쇼핑몰",
+    description: "트렌디한 패션 아이템을 만나보세요",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
