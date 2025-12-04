@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useClerkSupabaseClient } from "@/lib/supabase/clerk-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LuPlus, LuTrash2, LuCheck, LuX } from "react-icons/lu";
+import { LuPlus, LuTrash2, LuCheck } from "react-icons/lu";
 import Link from "next/link";
 
 interface Task {
@@ -29,7 +29,7 @@ export default function TasksTestPage() {
   const [newTaskDescription, setNewTaskDescription] = useState("");
 
   // Tasks 가져오기
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -68,7 +68,7 @@ export default function TasksTestPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, supabase]);
 
   // Task 생성
   const createTask = async (e: React.FormEvent) => {
@@ -137,7 +137,7 @@ export default function TasksTestPage() {
     if (isLoaded && user) {
       fetchTasks();
     }
-  }, [user, isLoaded]);
+  }, [user, isLoaded, fetchTasks]);
 
   if (!isLoaded) {
     return (
