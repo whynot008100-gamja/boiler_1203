@@ -58,7 +58,45 @@ export default function CartPage() {
         product: item.product as Product,
       }));
 
-      setCartItems(items);
+      // 품절 상품 자동 제거
+      const validItems: CartItem[] = [];
+      const outOfStockItems: CartItem[] = [];
+
+      for (const item of items) {
+        if (item.product.stock_quantity === 0) {
+          outOfStockItems.push(item);
+        } else {
+          validItems.push(item);
+        }
+      }
+
+      // 품절 상품이 있으면 제거
+      if (outOfStockItems.length > 0) {
+        const idsToRemove = outOfStockItems.map((item) => item.id);
+        await supabase.from("cart_items").delete().in("id", idsToRemove);
+
+        // 품절 상품이 제거되었음을 알림
+        if (outOfStockItems.length === 1) {
+          alert(
+            `${outOfStockItems[0].product.name} 상품이 품절되어 장바구니에서 제거되었습니다.`
+          );
+        } else {
+          alert(`${outOfStockItems.length}개의 품절 상품이 장바구니에서 제거되었습니다.`);
+        }
+      }
+
+      // 재고 부족 상품 수량 자동 조정
+      for (const item of validItems) {
+        if (item.quantity > item.product.stock_quantity) {
+          await supabase
+            .from("cart_items")
+            .update({ quantity: item.product.stock_quantity })
+            .eq("id", item.id);
+          item.quantity = item.product.stock_quantity;
+        }
+      }
+
+      setCartItems(validItems);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "장바구니를 가져오는 중 오류가 발생했습니다.";
@@ -216,9 +254,27 @@ export default function CartPage() {
                       {item.product.name}
                     </h3>
                   </Link>
-                  <p className="text-lg font-bold text-primary mb-4">
+                  <p className="text-lg font-bold text-primary mb-2">
                     {item.product.price.toLocaleString()}원
                   </p>
+                  {/* 재고 상태 표시 */}
+                  {item.product.stock_quantity === 0 ? (
+                    <p className="text-sm text-red-600 font-semibold mb-4">
+                      품절된 상품입니다
+                    </p>
+                  ) : item.product.stock_quantity < item.quantity ? (
+                    <p className="text-sm text-orange-600 font-semibold mb-4">
+                      재고 부족 (재고: {item.product.stock_quantity}개)
+                    </p>
+                  ) : item.product.stock_quantity < 10 ? (
+                    <p className="text-sm text-yellow-600 mb-4">
+                      재고 부족 경고 (재고: {item.product.stock_quantity}개)
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-600 mb-4">
+                      재고: {item.product.stock_quantity}개
+                    </p>
+                  )}
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <Button
@@ -249,7 +305,9 @@ export default function CartPage() {
                         size="icon"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         disabled={
-                          updating === item.id || item.quantity >= item.product.stock_quantity
+                          updating === item.id ||
+                          item.quantity >= item.product.stock_quantity ||
+                          item.product.stock_quantity === 0
                         }
                       >
                         <Plus className="w-4 h-4" />

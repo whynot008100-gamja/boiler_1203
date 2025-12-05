@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { ShoppingBag, ArrowLeft, ShoppingCart, Plus, Minus } from "lucide-react";
+import { AddToCartDialog } from "@/components/cart/AddToCartDialog";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -22,6 +23,8 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
 
   useEffect(() => {
     if (!productId) return;
@@ -54,6 +57,27 @@ export default function ProductDetailPage() {
 
     fetchProduct();
   }, [productId, supabase]);
+
+  // 장바구니 아이템 개수 가져오기
+  useEffect(() => {
+    if (!user || !supabase) return;
+
+    const fetchCartCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("cart_items")
+          .select("*", { count: "exact", head: true })
+          .eq("clerk_id", user.id);
+
+        if (error) throw error;
+        setCartItemCount(count || 0);
+      } catch (error) {
+        console.error("Error fetching cart count:", error);
+      }
+    };
+
+    fetchCartCount();
+  }, [user, supabase]);
 
   const handleAddToCart = async () => {
     if (!user || !product) return;
@@ -88,8 +112,15 @@ export default function ProductDetailPage() {
         if (insertError) throw insertError;
       }
 
-      alert("장바구니에 추가되었습니다!");
-      router.push("/cart");
+      // 장바구니 개수 업데이트
+      const { count } = await supabase
+        .from("cart_items")
+        .select("*", { count: "exact", head: true })
+        .eq("clerk_id", user.id);
+      setCartItemCount(count || 0);
+
+      // Dialog 표시
+      setShowDialog(true);
     } catch (err) {
       console.error("Error adding to cart:", err);
       alert("장바구니 추가 중 오류가 발생했습니다.");
@@ -236,6 +267,17 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* 장바구니 추가 Dialog */}
+      {product && (
+        <AddToCartDialog
+          open={showDialog}
+          onOpenChange={setShowDialog}
+          product={product}
+          quantity={quantity}
+          cartItemCount={cartItemCount}
+        />
+      )}
     </div>
   );
 }
