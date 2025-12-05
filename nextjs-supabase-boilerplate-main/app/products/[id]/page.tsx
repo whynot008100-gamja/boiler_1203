@@ -118,6 +118,9 @@ export default function ProductDetailPage() {
         .eq("clerk_id", user.id);
       setCartItemCount(count || 0);
 
+      // CartBadge 업데이트를 위한 Custom Event 발생
+      window.dispatchEvent(new CustomEvent("cartUpdated"));
+
       // Dialog 표시
       setShowDialog(true);
     } catch (err) {

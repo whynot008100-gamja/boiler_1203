@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useClerkSupabaseClient } from "@/lib/supabase/clerk-client";
 
 export function CartBadge() {
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const supabase = useClerkSupabaseClient();
   const [itemCount, setItemCount] = useState(0);
 
-  const fetchCartCount = useCallback(async () => {
+  const fetchCartCount = async () => {
     if (!user || !supabase) {
       setItemCount(0);
       return;
@@ -21,19 +21,14 @@ export function CartBadge() {
         .select("*", { count: "exact", head: true })
         .eq("clerk_id", user.id);
 
-      if (error) {
-        console.error("Error fetching cart count:", error);
-        return;
-      }
+      if (error) throw error;
       setItemCount(count || 0);
     } catch (error) {
       console.error("Error fetching cart count:", error);
     }
-  }, [user, supabase]);
+  };
 
   useEffect(() => {
-    if (!isLoaded) return;
-
     if (!user) {
       setItemCount(0);
       return;
@@ -59,38 +54,24 @@ export function CartBadge() {
       )
       .subscribe();
 
-    // 페이지 포커스 시에도 업데이트
+    // 페이지 포커스 시 업데이트
     const handleFocus = () => {
       fetchCartCount();
     };
     window.addEventListener("focus", handleFocus);
 
-    // 주기적으로 업데이트 (Realtime이 작동하지 않을 경우 대비)
-    const interval = setInterval(() => {
+    // Custom Event 리스너 (장바구니 추가 시 강제 업데이트)
+    const handleCartUpdate = () => {
       fetchCartCount();
-    }, 5000); // 5초마다
+    };
+    window.addEventListener("cartUpdated", handleCartUpdate);
 
     return () => {
       supabase.removeChannel(channel);
       window.removeEventListener("focus", handleFocus);
-      clearInterval(interval);
+      window.removeEventListener("cartUpdated", handleCartUpdate);
     };
-  }, [user, isLoaded, supabase, fetchCartCount]);
-
-  // 페이지 가시성 변경 시 업데이트
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && user) {
-        fetchCartCount();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [user, fetchCartCount]);
+  }, [user, supabase]);
 
   if (itemCount === 0) return null;
 

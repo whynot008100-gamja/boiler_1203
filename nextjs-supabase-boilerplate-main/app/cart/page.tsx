@@ -126,6 +126,9 @@ export default function CartPage() {
       if (updateError) throw updateError;
 
       await fetchCartItems();
+      
+      // CartBadge 업데이트를 위한 Custom Event 발생
+      window.dispatchEvent(new CustomEvent("cartUpdated"));
     } catch (err) {
       console.error("Error updating quantity:", err);
       alert("수량 변경 중 오류가 발생했습니다.");
@@ -147,6 +150,9 @@ export default function CartPage() {
       if (deleteError) throw deleteError;
 
       await fetchCartItems();
+      
+      // CartBadge 업데이트를 위한 Custom Event 발생
+      window.dispatchEvent(new CustomEvent("cartUpdated"));
     } catch (err) {
       console.error("Error removing item:", err);
       alert("상품 제거 중 오류가 발생했습니다.");
